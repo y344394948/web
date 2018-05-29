@@ -9,15 +9,23 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True #每当模板发生改变时，自动
 #将.json文件内容转化为字典
 class Files():
 
+    directory = os.path.join(os.path.abspath(os.path.dirname(__name__)), '..', 'files')
 
     def __init__(self):
         self.files = self.read_files()
 
     def read_files(self): #读取文件的函数
+        result = {}
+        for filename in os.listdir(self.directory):
+            file_path = os.path.join(self.directory, filename)
+            with open(file_path) as f:
+                result[filename[:-5]] = json.load(f)
+        return result
+    def get_title_list(self): #获得文章名称列表函数
+        return [item['title'] for item in self.files.values()]
+    def get_by_filename(self, filename): #获得文章内容
+        return self.files.get(filename)
 
-    def get_title_list(): #获得文章名称列表函数
-
-    def get_contents(): #获得文章内容
 
 files = Files()
 
@@ -27,14 +35,14 @@ def index():
 
 @app.route('/files/<filename>')
 def file(filename):
-    file_contents = files.get_contents(filename)
-    if not file_contents:
+    file_item = files.get_by_filename(filename)
+    if not file_item:
         abort(404)
-    return render_template('file.html', file_contents = file_contents)
+    return render_template('file.html', file_item=file_item)
 
-@app.errorhandle(404)
+@app.errorhandler(404)
 def not_found(error):
     return render_template('404.html'), 404
 
-if __name__ = '__main__':
+if __name__ == '__main__':
     app.run()
